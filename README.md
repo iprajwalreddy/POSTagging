@@ -1,2 +1,38 @@
-# POSTagging
-Elements of Artificial Intelligence Project
+* Part of Speech Tagging:
+In this question, we are supposed to mark every word in a sentence with its part of speech using Bayes Networks. We are supposed to do it using three methods, one being the ‘simplified’ Bayes net method, the second method being ‘hmm_viterbi’, which incorporates a richer Bayes net model and finally, the third method being ‘complex_mcmc’ which also uses Gibbs Sampling to sample posterior distribution along with Bayes Net.
+* Training Data:
+The training data that we got was in the file called ‘bc.train’. The file consisted of individual sentences in each line, where in each word of the sentence is followed by a part of speech tag. 
+* Initial Code:
+The skeletal code provided by the professor, returned ‘noun’ as the part of speech tag for every word in the test sentence, for all the three methods. This ended up giving an 18.60% correct tagging for the words and 0% for the sentences for all three approaches.
+* Approach:
+We have saved the 12 different types of parts of speech tagging in a list called pos_list, we kept a track of the counts of the following factors from the bc.train file, which was used further to calculate emission, initial and transition probabilities:
+  *	count_of_number_words  : The total count of the words in the train file. 
+  *	 word_count: This dictionary contains the occurrences of the individual words in the train datafile i.e {‘The’:1}
+  *	Pos_count: This dictionary contains the count of the pos occurrences e.g. {‘det’:1} 
+  *	word_pos_count : This dictionary contains the count of the word having  a certain part of speech tagging , e.g. {‘The|det’:1}
+  *	pos_word_count: This dictionary contains the count of the pos being a word ,e.g. {‘det|The’:1}
+  *	pos_pos_count : This dictionary has count of the current pos being with the adjacent pos in the list e.g.:{(‘det,noun’:1), (‘det,verb’:1), (‘det,adj’:1)..and so on}
+  *	starting_pos_count: This dictionary has the count of a certain pos being at the start of the sentence.
+Using the above count dictionaries, we are calculating the probabilities that are required for the part of speech tagging. The different probability dictionaries are:
+  *	word_prob :  This dictionary has the probabilities of a particular word occurring in a sentence. i.e. P(‘the’)
+  *	pos_prob: This dictionary has the probabilities of a particular pos occurring in a sentence.i.e P(‘det’)
+  *	word_pos_prob: This dictionary has the probability of a word given that of a pos. i.e P(‘the’|’det’)
+  *	pos_word_prob: This dictionary has the probability of a pos given that of a word. i.e P(‘det’|’the’)
+  *	starting_pos_prob: This dictionary has the probability of a certain pos of the word starting at the sentence. 
+#### Simplified:
+In simplified, we initially create an list called ‘result’, which consists of  ‘noun’ for the entire length of the sentence. We, then run a for loop for the length of the sentence and check the probability of the word given a certain pos, for the all the part of speech tags. For every probability that is greater than the value ‘prob’ which was initially zero, we assign the new maximum probability value to ‘prob’ and change the tag in the result list to the tag which gave maximum  probability.
+This method gave us an accuracy of 93.95% for words and 47.50% of the sentences being correctly tagged.
+As this is a basic model, it performed average.
+#### Hidden Markov Models Viterbi:
+In Viterbi, we consider not only emission probability, but also transition probability and initial probability for getting the correct tag for a particular word.
+We initially create two empty lists called result and prob and then run a for loop for the entire sentence. We then calculate the emission probability for each pos wherein if the word is present, then we get the count of the number of times the pos is present given that of a certain word. We then check if it’s at the start of a sentence and if it is at the beginning of the sentence, then the probability of it being a certain pos is given by the product of emission probability and probability that a given pos is present at the beginning of a sentence(‘starting_pos_prob’). We store this value in the prob list.
+If it’s not at the beginning of the sentence, then we create a temporary dictionary and then calculate the value of the probability which is the product of the probability of the previous word having a certain tag value and the transitional probability. We, then take a max of the values from temp and then multiply the maximum value from temp to the emission probability value and then store it again in the prob list.
+We then again get the maximum probability value from the prob list and then check if the probability value in the prob list is equal to it and if its equal to it then we append the corresponding part of speech tag to result.
+This method gave us an accuracy of 94.37% for words and 50.75% of the sentences being correctly tagged.
+In this approach, the probability also depends on the previous state, and hence it performs better than the simplified Bayesian nets approach, which doesn’t depend on the previous state.
+#### Markov Chain Monte Carlo:
+In MCMC, we use the Gibbs sampling approach wherein we randomly generate samples. Here the probability depends on the previous state and the current state. 
+We get the random value by running it on the simplified function rather than using the random function.
+We initially create an empty dictionary called, ‘final_count’. We then run the for loop a certain number of times(in this case we are running it 100 times), along with another for loop for iterating the words in the sentences. We then, initialize an empty list, in which we store every probability value that we calculate. If the sentence has only one word, then we calculate the probability of the word with every pos tag and get the log value of it and then store it in the empty list which was initially create. Or else, if the index is at the beginning of the sentence, then again we calculate the probability of the word given that of a pos and then add it to the probability of a certain pos being at the beginning of the sentence and also add the transitional probability of the pos given that of the random pos. We take log on each of these and then sum them up and store it in the list which was initially created. Else if the index is equal to the length of the random value minus one, then we calculate the emission probability of the word given a certain pos, the transitional probability of the random value of the previous random pos and the current random pos, the emission probability of the word given the previous random pos and finally the transitional probability of the current pos given that of the previous random pos. We again take the log of the values and then append it to initial empty temporary list. If the index does not satisfy any of the above conditions, then probability is calculated by the sum of log of the emission probabilities of the current word given that of pos, emission probability of the previous word given that of the previous random pos , emission probability of the current word given that of the previous random pos, emission probability of the next word given that of the current random pos, emission probability of the next word given that of the next random pos, transitional probability of the previous random pos with all the possible values of  pos given that of the next random pos. We, then add the sum and store in the initial temporary list again.
+We, then get a random integer between 1 and 0 and then add all the possible probabilities. We, then check if the sum is greater than the random value which was generated, and in case it is greater then we store the value of the pos tag. We then try getting the pos tag that has the highest probability and store it in a list. This list is the output of the mcmc algorithm that contains the pos tag of the sentences.
+This method gave us an accuracy of 94.27% for words and 50.50% of the sentences being correctly tagged.
